@@ -1,0 +1,2 @@
+# This project uses only the Python standard library.
+# Optional OCR via Hugging Face uses urllib from the standard library.
