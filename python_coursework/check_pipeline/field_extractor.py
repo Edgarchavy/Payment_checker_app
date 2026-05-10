@@ -36,7 +36,38 @@ def all_matches(text: str, pattern: str) -> list[str]:
     return [match.group(1) for match in re.finditer(pattern, text)]
 
 
+def _value_after_label(lines: list[str], labels: list[str], stop_words: list[str] | None = None) -> str:
+    stop_words = stop_words or []
+    normalized_labels = [label.upper() for label in labels]
+    for index, line in enumerate(lines):
+        upper_line = line.upper()
+        for label in normalized_labels:
+            if label in upper_line:
+                label_start = upper_line.find(label)
+                tail = line[label_start + len(label):].strip(" :|-")
+                if tail:
+                    return tail.strip()
+                buffer: list[str] = []
+                for next_line in lines[index + 1:index + 4]:
+                    next_upper = next_line.upper()
+                    if any(stop.upper() in next_upper for stop in stop_words):
+                        break
+                    if re.fullmatch(r"[0-9]{2}\.[0-9]{2}\.[0-9]{4}.*", next_line):
+                        break
+                    buffer.append(next_line)
+                return " ".join(buffer).strip()
+    return ""
+
+
 def guess_recipient(lines: list[str], receipt_type: str) -> str:
+    label_value = _value_after_label(
+        lines,
+        ["Наименование получателя", "Получатель платежа", "Получатель"],
+        ["Дата", "Rata", "Номер карты", "MCC", "Сумма", "Плательщик"],
+    )
+    if label_value:
+        return label_value
+
     if receipt_type in {"card_payment", "foreign_card_payment", "transfer_or_exchange", "other"}:
         return lines[4] if len(lines) > 4 else ""
     if receipt_type == "detailed_payment":
@@ -52,6 +83,14 @@ def guess_recipient(lines: list[str], receipt_type: str) -> str:
 
 
 def guess_payer(lines: list[str], receipt_type: str) -> str:
+    label_value = _value_after_label(
+        lines,
+        ["Плательщик", "Плательщих", "Отправитель платежа"],
+        ["Счет", "Счёт", "Сумма", "Наименование получателя", "Получатель"],
+    )
+    if label_value:
+        return label_value
+
     if receipt_type == "detailed_payment":
         return lines[4] if len(lines) > 4 else ""
     if receipt_type == "transfer_or_exchange":

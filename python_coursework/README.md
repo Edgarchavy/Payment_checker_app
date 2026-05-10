@@ -1,35 +1,23 @@
 # Python coursework pipeline
 
-This folder contains a Python implementation for:
-- extracting text from Alfa-Bank PDF receipts
-- parsing key payment fields
-- building a reference table of expected payments
-- matching actual checks against expected values
-- exporting CSV and XLSX outputs
+This folder contains the Python implementation of the payment checking prototype:
 
-Main command:
+- extracting text from PDF bank receipts;
+- preprocessing receipt photos and screenshots before OCR;
+- recognizing image text through local Tesseract OCR;
+- extracting key payment attributes;
+- checking one uploaded document against manually entered expected details;
+- batch matching a CSV/XLSX table of expected payments against a set of bank documents;
+- calculating a fuzzy matching score;
+- exporting CSV and XLSX results.
 
-```powershell
-python python_coursework\main.py run-all
-```
-
-Optional image OCR:
-- use `python_coursework/check_pipeline/ocr_tesseract.py`
-- requires local Tesseract OCR installation
-- intended for receipt photos or scans
-
-Outputs are written to:
-- `project_output_py/01_extracted`
-- `project_output_py/02_reference`
-- `project_output_py/03_results`
-
-Local web interface:
+Run the local web interface:
 
 ```powershell
 python python_coursework\local_webapp.py
 ```
 
-Or on Windows you can simply run:
+Or use:
 
 ```text
 run_localhost_app.bat
@@ -41,9 +29,10 @@ Then open:
 http://127.0.0.1:8000
 ```
 
-In the browser you can:
-- enter the expected amount
-- enter recipient and optional payment code
-- upload a PDF receipt
-- upload a receipt photo or screenshot if Tesseract OCR is installed
-- receive a verdict: `Оплачено`, `Частично оплачено`, or `Не оплачено`
+Statuses returned by the system:
+
+- `Оплачено`;
+- `Возможное совпадение`;
+- `Не оплачено`.
+
+For image OCR, install Tesseract OCR separately or set `TESSERACT_CMD` to the full path of `tesseract.exe`.
